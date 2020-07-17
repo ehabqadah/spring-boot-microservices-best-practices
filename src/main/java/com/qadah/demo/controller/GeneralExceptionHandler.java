@@ -33,6 +33,8 @@ public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
 
 	public static final String ACCESS_DENIED = "Access denied!";
 	public static final String INVALID_REQUEST = "Invalid request";
+	public static final String ERROR_MESSAGE_TEMPLATE = "message: %s %n requested uri: %s";
+	public static final String LIST_JOIN_DELIMITER = ",";
 	private static final Logger local_logger = LoggerFactory.getLogger(GeneralExceptionHandler.class);
 	private static final String ERRORS_FOR_PATH = "errors {} for path {}";
 	private static final String PATH = "path";
@@ -40,8 +42,7 @@ public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
 	private static final String STATUS = "status";
 	private static final String MESSAGE = "message";
 	private static final String TIMESTAMP = "timestamp";
-	public static final String ERROR_MESSAGE_TEMPLATE = "message: %s %n requested uri: %s";
-	public static final String LIST_JOIN_DELIMITER = ",";
+
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException exception, HttpHeaders headers,
 	                                                              HttpStatus status, WebRequest request) {
@@ -97,7 +98,7 @@ public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
 		final HttpStatus status = responseStatus!=null ? responseStatus.value():HttpStatus.INTERNAL_SERVER_ERROR;
 		final String localizedMessage = exception.getLocalizedMessage();
 		final String path = request.getDescription(false);
-		String message = (StringUtils.isNotEmpty(localizedMessage) ? localizedMessage:status.getReasonPhrase()) ;
+		String message = (StringUtils.isNotEmpty(localizedMessage) ? localizedMessage:status.getReasonPhrase());
 		logger.error(String.format(ERROR_MESSAGE_TEMPLATE, message, path), exception);
 		return getExceptionResponseEntity(status, request, Collections.singletonList(message));
 	}
