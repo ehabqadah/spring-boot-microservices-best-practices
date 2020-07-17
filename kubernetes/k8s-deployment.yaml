@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: qadah
+  labels:
+    app: demo
+  name: demo
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: demo
+    version: v1.0.0
+  sessionAffinity: None
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: qadah
+  labels:
+    app: demo
+  name: demo
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: demo
+      version: v1.0.0
+  template:
+    metadata:
+      labels:
+        app: demo
+        version: v1.0.0
+    spec:
+      containers:
+        - image: gcr.io/demo-project/demo:latest
+          imagePullPolicy: Always
+          name: demo
+          ports:
+            - containerPort: 8080
+              name: app-port
+              protocol: TCP
+          env:
+            - name: MYSQL_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: demo-cloudsql
+                  key: MYSQL_SERVICE_HOST
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demo-cloudsql
+                  key: MYSQL_PASSWORD
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: demo-cloudsql
+                  key: MYSQL_USERNAME
+            - name: MYSQL_DB
+              valueFrom:
+                secretKeyRef:
+                  name: demo-cloudsql
+                  key: MYSQL_DATABASE
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 50
+            periodSeconds: 10
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 10
+          resources:
+            limits:
+              memory: "900Mi"
+              cpu: "2"
+            requests:
+              memory: "600Mi"
+              cpu: "1"
+        - image: b.gcr.io/cloudsql-docker/gce-proxy:1.14
+          name: cloudsql-proxy
+          command: ["/cloud_sql_proxy", "--dir=/cloudsql",
+                    "-instances=tradeos-test1:us-central1:demo-database-test=tcp:3306",
+                    "-credential_file=/secrets/cloudsql/credentials.json"]
+          securityContext:
+            runAsUser: 2  # non-root user
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: demo-cloudsql
+              mountPath: /secrets/cloudsql
+              readOnly: true
+      volumes:
+        - name: demo-cloudsql
+          secret:
+            secretName: demo-cloudsql
+        - name: google-cloud-key
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler

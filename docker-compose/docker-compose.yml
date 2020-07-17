@@ -1,0 +1,30 @@
+  # Use root/root as user/password credentials
+  # docker-compose -p "sql" up -d
+  # access http://localhost:8081
+
+version: '3.3'
+
+services:
+  mysql6:
+    image: mysql:5.7
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: on-failure
+    container_name: mysql_local
+    ports:
+      - 3306:3306
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "local_db"
+      MYSQL_USER: "local_user"
+      MYSQL_PASSWORD: "P@ssowrd1"
+
+  adminer:
+    image: adminer
+    restart: on-failure
+    ports:
+      - 8081:8080
+volumes:
+  db_data: {}
+
