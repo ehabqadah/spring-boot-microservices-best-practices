@@ -32,7 +32,7 @@ public class OrderIncomingDto {
 	@JsonProperty(required = true)
 	@NotEmpty
 	@NotBlank
-	@Max(10)
+	@Size(min = 5, max = 10)
 	private String status;
 
 	@JsonProperty(required = true)
