@@ -16,10 +16,11 @@ import java.util.Random;
  */
 public class BaseIdentifierGenerator extends UUIDGenerator {
 
-    private static final int NUMBER_OF_CHARS_IN_ID_PART = -4;
+    private static final int NUMBER_OF_CHARS_IN_ID_PART = -5;
 
     @Override
     public Serializable generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
+        // Generate a custom ID for the new entity
         final String uuid = super.generate(session, obj).toString();
         final long longTimeRandom = System.nanoTime() + System.currentTimeMillis() + new Random().nextLong() + Objects.hash(obj);
         final String timeHex = Long.toHexString(longTimeRandom);

@@ -24,7 +24,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * * Handle all exceptions and java bean validation errors for all endpoints income data that use the @Valid annotation
+ * * Handle all exceptions and java bean validation errors
+ * for all endpoints income data that use the @Valid annotation
  *
  * @author Ehab Qadah
  */
@@ -44,8 +45,10 @@ public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
 	private static final String TIMESTAMP = "timestamp";
 
 	@Override
-	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException exception, HttpHeaders headers,
-	                                                              HttpStatus status, WebRequest request) {
+	protected ResponseEntity<Object> handleMethodArgumentNotValid(
+			MethodArgumentNotValidException exception,
+			HttpHeaders headers,
+			HttpStatus status, WebRequest request) {
 		List<String> validationErrors = exception.getBindingResult()
 				.getFieldErrors()
 				.stream()
@@ -55,8 +58,12 @@ public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	@Override
-	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
-		return getExceptionResponseEntity(status, request, Collections.singletonList(ex.getLocalizedMessage()));
+	protected ResponseEntity<Object> handleHttpMessageNotReadable(
+			HttpMessageNotReadableException ex,
+			HttpHeaders headers, HttpStatus status,
+			WebRequest request) {
+		return getExceptionResponseEntity(status, request,
+				Collections.singletonList(ex.getLocalizedMessage()));
 	}
 
 	@ExceptionHandler({ConstraintViolationException.class})
@@ -68,9 +75,14 @@ public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
 		return getExceptionResponseEntity(HttpStatus.BAD_REQUEST, request, validationErrors);
 	}
 
-	private ResponseEntity<Object> getExceptionResponseEntity(final HttpStatus status, WebRequest request, List<String> errors) {
+	private ResponseEntity<Object> getExceptionResponseEntity(
+			final HttpStatus status,
+			WebRequest request, List<String> errors) {
 		final Map<String, Object> body = new LinkedHashMap<>();
-		final String errorsMessage = CollectionUtils.isNotEmpty(errors) ? errors.stream().filter(StringUtils::isNotEmpty).collect(Collectors.joining(LIST_JOIN_DELIMITER)):status.getReasonPhrase();
+
+		final String errorsMessage = CollectionUtils.isNotEmpty(errors) ?
+				errors.stream().filter(StringUtils::isNotEmpty).collect(Collectors.joining(LIST_JOIN_DELIMITER))
+				:status.getReasonPhrase();
 		final String path = request.getDescription(false);
 		body.put(TIMESTAMP, Instant.now());
 		body.put(STATUS, status.value());
@@ -93,9 +105,11 @@ public class GeneralExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	@ExceptionHandler({Exception.class})
-	public ResponseEntity<Object> handleAll(Exception exception, WebRequest request) {
-		ResponseStatus responseStatus = exception.getClass().getAnnotation(ResponseStatus.class);
-		final HttpStatus status = responseStatus!=null ? responseStatus.value():HttpStatus.INTERNAL_SERVER_ERROR;
+	public ResponseEntity<Object> handleAllExceptions(Exception exception, WebRequest request) {
+		ResponseStatus responseStatus =
+				exception.getClass().getAnnotation(ResponseStatus.class);
+		final HttpStatus status =
+				responseStatus!=null ? responseStatus.value():HttpStatus.INTERNAL_SERVER_ERROR;
 		final String localizedMessage = exception.getLocalizedMessage();
 		final String path = request.getDescription(false);
 		String message = (StringUtils.isNotEmpty(localizedMessage) ? localizedMessage:status.getReasonPhrase());

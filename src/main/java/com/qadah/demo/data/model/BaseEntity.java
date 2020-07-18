@@ -10,6 +10,7 @@ import java.time.Instant;
 
 /**
  * <p> Root entity for object persistence via JPA.</p>
+ *
  * @author Ehab Qadah
  */
 @MappedSuperclass
@@ -17,7 +18,9 @@ public abstract class BaseEntity {
 
 	@Id
 	@GeneratedValue(generator = "custom-generator", strategy = GenerationType.IDENTITY)
-	@GenericGenerator(name = "custom-generator", strategy = "com.qadah.demo.data.model.id.generator.BaseIdentifierGenerator")
+	@GenericGenerator(
+			name = "custom-generator",
+			strategy = "com.qadah.demo.data.model.id.generator.BaseIdentifierGenerator")
 	protected String id;
 
 	@CreationTimestamp
@@ -31,6 +34,15 @@ public abstract class BaseEntity {
 	@Column
 	@Version
 	protected int version;
+
+	/**
+	 * Indicates whether the object has already been persisted or not
+	 *
+	 * @return true if the object has not yet been persisted
+	 */
+	public boolean isNew() {
+		return getId()==null;
+	}
 
 	public int getVersion() {
 		return version;
@@ -64,14 +76,6 @@ public abstract class BaseEntity {
 		this.id = id;
 	}
 
-	/**
-	 *Indicates whether the object has already been persisted or not
-	 *
-	 * @return true if the object has not yet been persisted
-	 */
-	public boolean isNew() {
-		return getId() == null;
-	}
 	@Override
 	public String toString() {
 		return id;
